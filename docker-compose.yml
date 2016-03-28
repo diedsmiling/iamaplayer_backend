@@ -1,0 +1,9 @@
+version: '2'
+services:
+  web:
+    build: .
+    container_name: iamaplayer
+    volumes:
+         - .:/usr/src/app
+    ports:
+     - "49170:8080"
