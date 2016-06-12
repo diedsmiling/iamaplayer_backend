@@ -1,34 +1,16 @@
 import dotenv from 'dotenv'
-import fs from 'fs';
-import express from 'express';
-import Schema from './schema/schema';
-import GraphQLHTTP from 'express-graphql';
-import {graphql} from 'graphql';
-import {introspectionQuery} from 'graphql/utilities';
-import {MongoClient} from 'mongodb'
+import Koa from 'koa'
+import graphQLHTTP from 'koa-graphql'
+import mount from 'koa-mount'
+import convert from 'koa-convert'
+import { schema } from './data/schema'
 
 dotenv.config()
 
-let app = express();
+const graphQLServer = new Koa()
 
-(async () => {
-  try {
-    let db = await MongoClient.connect(
-      process.env.MONGO_URL,
-      { uri_decode_auth: true }
-    )
-    let schema = Schema(db)
+graphQLServer.use(mount('/', convert(graphQLHTTP({ schema, pretty: true }))))
 
-    app.use('/graphql', GraphQLHTTP({
-      schema,
-      graphiql: process.env.GRAPHIQL
-    }));
-
-    let server = app.listen(process.env.PORT || 3000, () => {
-      console.log(`Listening on port ${server.address().port}`)
-    });
-
-  } catch(e) {
-    console.warn(e)
-  }
-})();
+graphQLServer.listen(process.env.PORT, () => console.log(
+  `GraphQL Server is now running on http://localhost:${process.env.PORT}`
+))
